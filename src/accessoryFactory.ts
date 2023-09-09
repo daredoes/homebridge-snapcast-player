@@ -1,17 +1,13 @@
-import { default as AlexaRemote, Device, Media } from 'alexa-remote2';
+import { default as SnapcastRemote, Device, Media } from 'snapcast-remote2';
 import type { API, Logging, PlatformAccessory, Service, WithUUID } from 'homebridge';
 import { CharacteristicInitializer } from './characteristicInitializer';
-import { DevicePredicate } from './devicePredicate';
 import { ServiceInitializer } from './serviceInitializer';
 
 export class AccessoryFactory {
-    private static readonly TV_DEVICE_FAMILES = new Set(['KNIGHT']);
-
     public constructor(
         private readonly logger: Logging,
         private readonly homebridge: API,
-        private readonly alexa: AlexaRemote,
-        private readonly devicePredicates: DevicePredicate[],
+        private readonly snapcast: SnapcastRemote,
         private readonly serviceInitializers: ServiceInitializer[],
         private readonly characteristicInitializers: CharacteristicInitializer[],
     ) {}
@@ -19,7 +15,6 @@ export class AccessoryFactory {
     public async createAccessories(): Promise<PlatformAccessory[]> {
         return await Promise.all(
             (await this.getDevices())
-                .filter(device => this.devicePredicates.every(predicate => predicate.test(device)))
                 .map(device => this.createAccessory(device)),
         );
     }
@@ -46,7 +41,7 @@ export class AccessoryFactory {
 
     private getDevices(): Promise<Device[]> {
         return new Promise((resolve, reject) => {
-            this.alexa.getDevices((error, data) => {
+            this.snapcast.getDevices((error, data) => {
                 if (error) {
                     return reject(error);
                 }
@@ -58,7 +53,7 @@ export class AccessoryFactory {
 
     private getMedia(device: Device): Promise<Media> {
         return new Promise((resolve, reject) => {
-            this.alexa.getMedia(device.serialNumber, (error, data) => {
+            this.snapcast.getMedia(device.serialNumber, (error, data) => {
                 if (error) {
                     return reject(error);
                 }
@@ -72,9 +67,7 @@ export class AccessoryFactory {
         const name = device.accountName;
         const serialNumber = device.serialNumber;
         const uuid = this.homebridge.hap.uuid.generate(serialNumber);
-        const category = AccessoryFactory.TV_DEVICE_FAMILES.has(device.deviceFamily)
-            ? this.homebridge.hap.Categories.TELEVISION
-            : this.homebridge.hap.Categories.SPEAKER;
+        const category = this.homebridge.hap.Categories.SPEAKER;
 
         this.logger.debug(`Creating accessory for device: ${JSON.stringify(device)}`);
 
@@ -85,7 +78,7 @@ export class AccessoryFactory {
         let service = accessory.getService(serviceType);
 
         if (!service) {
-            service = accessory.addService(serviceType);
+            service = accessory.addService(serviceType as unknown as Service);
         }
 
         return service;

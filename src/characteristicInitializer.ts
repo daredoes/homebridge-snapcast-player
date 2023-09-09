@@ -1,6 +1,6 @@
-import { CommandEvent, CommandValue, Device, DopplerCommandEvent, Media, PushVolumeChangeCommandEvent, PushAudioPlayerStateCommandEvent } from 'alexa-remote2';
+import { CommandEvent, CommandValue, Device, DopplerCommandEvent, Media, PushVolumeChangeCommandEvent, PushAudioPlayerStateCommandEvent } from 'snapcast-remote2';
 import type { Characteristic, CharacteristicValue, HAP, Logging, Service, WithUUID } from 'homebridge';
-import { AlexaBridge } from './alexaBridge';
+import { SnapcastBridge } from './snapcastBridge';
 
 function isVolumeChange(command: CommandEvent): command is PushVolumeChangeCommandEvent {
     return command.command === CommandValue.PUSH_VOLUME_COMMAND;
@@ -16,7 +16,7 @@ export interface CharacteristicInitializer {
 }
 
 export abstract class BaseCharacteristicInitializer implements CharacteristicInitializer {
-    public constructor(protected readonly logger: Logging, protected readonly hap: HAP, private readonly alexa: AlexaBridge) {}
+    public constructor(protected readonly logger: Logging, protected readonly hap: HAP, private readonly snapcast: SnapcastBridge) {}
 
     protected setValue(service: Service, value: CharacteristicValue): void {
         service.getCharacteristic(this.getCharacteristic()).setValue(value);
@@ -28,11 +28,11 @@ export abstract class BaseCharacteristicInitializer implements CharacteristicIni
         getCommand: ((value: CharacteristicValue) => string) | string,
         getCommandValue?: ((value: CharacteristicValue) => unknown) | string | number | Record<string, unknown> | undefined,
     ): void {
-        this.alexa.onCharacteristicSet(device, service, this.getCharacteristic(), getCommand, getCommandValue);
+        this.snapcast.onCharacteristicSet(device, service, this.getCharacteristic(), getCommand, getCommandValue);
     }
 
     protected onCommand(device: Device, listener: (command: DopplerCommandEvent) => void): void {
-        this.alexa.onDeviceCommand(device, listener);
+        this.snapcast.onDeviceCommand(device, listener);
     }
 
     public abstract getCharacteristic(): WithUUID<new () => Characteristic>;

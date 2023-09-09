@@ -1,4 +1,4 @@
-declare module 'alexa-remote2' {
+declare module 'snapcast-remote2' {
     import type { EventEmitter } from 'events';
 
     type Callback<T> = (error: unknown, data: T) => void;
@@ -105,7 +105,7 @@ declare module 'alexa-remote2' {
 
     type SerialOrName = string | Device;
 
-    class AlexaRemote extends EventEmitter {
+    class SnapcastRemote extends EventEmitter {
         public readonly cookie?: string;
         public constructor();
         public init(
@@ -337,5 +337,5 @@ declare module 'alexa-remote2' {
         public on(event: 'command', listener: (command: CommandEvent) => void): this;
     }
 
-    export default AlexaRemote;
+    export default SnapcastRemote;
 }
